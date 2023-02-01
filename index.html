@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAKE E-COMMERCE</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="navbar">
+        <a href="./index.html">Home</a>
+        <a href="./cart.html">Cart🛒</a>
+    </div>
+    <div class="filterPart">
+        <form>
+            <label>Price: </label>
+            <input type="number" placeholder="From" id="from">
+            <input type="number" placeholder=To id="to">
+            <input type="submit" value="Filter">
+        </form>
+        <select name="category" id="category">
+            <option value="">Select-category</option>
+            <option value="electronics">electronics</option>
+            <option value="jewelery">jewelery</option>
+            <option value="men's clothing">men's clothing</option>
+            <option value="women's clothing">women's clothing</option>
+        </select>
+        <select name="price" id="price">
+            <option value="">sort price</option>
+            <option value="htl">High to low</option>
+            <option value="lth">Low to high</option>
+        </select>
+    </div>
+    <div class="container"></div>
+</body>
+<script>
+    let contEl = document.querySelector(".container");
+    let filterForm = document.querySelector("form");
+    let category = document.getElementById("category");
+    let price = document.getElementById("price");
+    let fetchData = [];
+
+    let cartData = JSON.parse(localStorage.getItem("cartItem")) || [];
+
+    category.addEventListener("change", function(){
+        fetch(`https://fakestoreapi.com/products/category/${category.value}`)
+            .then(res=>res.json())
+            .then(data=>{
+                displayProducts(data);
+            })         
+    })
+    price.addEventListener("change", function(){
+        if(price.value=="lth"){
+            let sortedArray = fetchData.sort((a,b)=> a.price-b.price)
+            displayProducts(sortedArray);
+        }else{
+            let sortedArray = fetchData.sort((a,b)=> b.price-a.price)
+            displayProducts(sortedArray);
+
+        }        
+    })
+
+    const url = `https://fakestoreapi.com/products`;
+    fetch(url)
+    .then(res => res.json())
+    .then(data =>{
+        fetchData = data;
+        displayProducts(data)
+    })
+    .catch(error => console.log(error))
+    filterForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        let fromPrice = +filterForm.from.value;
+        let toPrice = +filterForm.to.value;
+
+        let filtered = fetchData.filter((elem)=> (fromPrice <= elem.price && toPrice >= elem.price))
+        console.log(filtered)
+        displayProducts(filtered);
+    })
+
+    function displayProducts(data){
+        console.log(data);
+        contEl.innerHTML = "";
+        data.forEach((element) => {
+            let productCard = document.createElement("div");
+            productCard.className = "card"
+
+            let img = document.createElement("img");
+            img.src = element.image;
+
+            let title = document.createElement("h3");
+            title.innerText = element.title;
+            
+            let box = document.createElement("div");
+            box.style.display="flex"
+            box.style.justifyContent="space-between";
+
+            let rating = document.createElement("h4");
+            rating.innerText = `${element.rating.rate}⭐/5`;
+            
+            let price = document.createElement("h4");
+            price.textContent = `💲${element.price}`;
+
+            box.append(price,rating);
+
+            let btn = document.createElement("button");
+            btn.innerText = "Add to cart";
+            btn.className = "addToCartBtn";
+            btn.addEventListener("click", ()=>{
+                cartData.push(element);
+                localStorage.setItem("cartItem", JSON.stringify(cartData));
+            })
+
+            productCard.append(img,title,box,btn);
+            contEl.append(productCard);
+        })
+    }
+</script>
+</html>
